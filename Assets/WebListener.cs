@@ -10,14 +10,30 @@ using System.Threading;
 
 public class WebListener : MonoBehaviour
 {
+    [SerializeField] bool testing = false;
+    [SerializeField] string filePath = "";
+    [SerializeField] int remainingTests = 0;
 
     private const int PORT = 5005;
+    private RetrievalTest testFile;
+    private Queue<Dictionary<string, object>> testQueue;
 
     // Start is called before the first frame update
     void Start()
     {
+        testFile = new RetrievalTest();
         Thread t = new Thread(() => Listener(GetLocalIP()));
         t.Start();
+    }
+
+    void Update()
+    {
+        // Checks to see if the retrievals are being tested
+        if (testing)
+        {
+            remainingTests = testFile.ParseTestFile(filePath);
+            testing = false;
+        }
     }
 
     // Obtains the local machine IP address and returns it
@@ -43,13 +59,14 @@ public class WebListener : MonoBehaviour
         {
             while (true)
             {
-                Debug.Log("Waiting for broadcast");
                 Byte[] packet = listener.Receive(ref groupEP);
                 string jsonStr = Encoding.UTF8.GetString(packet);
                 if (isDictionary(jsonStr))
                 {
                     Dictionary<string, object> data = DeserializePacket(jsonStr);
-                    IterateDictionary(data);
+                    if(data != null){
+                        IsTesting(data);
+                    }
                 }
             }
         }
@@ -63,12 +80,37 @@ public class WebListener : MonoBehaviour
         }
     }
 
+    private void IsTesting(Dictionary<string, object> data)
+    {
+        // Tests recieved dictionary if testing is in progress
+        if (remainingTests != 0)
+        {
+            if (!testFile.TestPacket(data))
+            {
+                Debug.Log("Test Failed!");
+                Application.Quit();
+            }
+            remainingTests--;
+        }
+    }
+
     // Takes the recieved packet and deserializes it into Dictionary object
     private Dictionary<string, object> DeserializePacket(string jsonStr)
     {
         jsonStr = jsonStr.Substring(jsonStr.IndexOf("{"));
-        jsonStr = jsonStr.Substring(0, jsonStr.IndexOf("}") + 1);
-        return JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonStr);
+        Debug.Log(jsonStr);
+        if(jsonStr.LastIndexOf("}") != jsonStr.Length - 1){
+            jsonStr = jsonStr.Substring(0, jsonStr.LastIndexOf("}") + 1);
+        }
+        try{
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonStr);
+        }
+        catch(Exception e)
+        {
+            Debug.Log(e.ToString());
+            Application.Quit();
+            return null;
+        }
     }
 
     // Iterates through a dictionary printing all of its keys and values
@@ -85,6 +127,12 @@ public class WebListener : MonoBehaviour
     private Boolean isDictionary(string data)
     {
         return data.Contains("{") && data.Contains("}");
+    }
+
+    // Tests the data retrieved from the most recent packet
+    private bool testDataRetrieval()
+    {
+        return true;
     }
 
 }
