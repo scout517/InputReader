@@ -64,7 +64,8 @@ public class WebListener : MonoBehaviour
                 if (isDictionary(jsonStr))
                 {
                     Dictionary<string, object> data = DeserializePacket(jsonStr);
-                    if(data != null){
+                    if (data != null)
+                    {
                         IsTesting(data);
                     }
                 }
@@ -82,7 +83,7 @@ public class WebListener : MonoBehaviour
 
     private void IsTesting(Dictionary<string, object> data)
     {
-        // Tests recieved dictionary if testing is in progress
+        // Tests recieved Dictionary if testing is in progress
         if (remainingTests != 0)
         {
             if (!testFile.TestPacket(data))
@@ -97,18 +98,19 @@ public class WebListener : MonoBehaviour
     // Takes the recieved packet and deserializes it into Dictionary object
     private Dictionary<string, object> DeserializePacket(string jsonStr)
     {
-        jsonStr = jsonStr.Substring(jsonStr.IndexOf("{"));
-        Debug.Log(jsonStr);
-        if(jsonStr.LastIndexOf("}") != jsonStr.Length - 1){
+        jsonStr.Replace("\0", string.Empty); // Get rid of all null characters
+        jsonStr = jsonStr.Substring(jsonStr.IndexOf("{\"")); // Finds first bracket
+        if (jsonStr.LastIndexOf("}") != jsonStr.Length - 1)
+        {  // Finds second bracket
             jsonStr = jsonStr.Substring(0, jsonStr.LastIndexOf("}") + 1);
         }
-        try{
-            return JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonStr);
+        try
+        {
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonStr); // Converts Json to Dictionary
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Debug.Log(e.ToString());
-            Application.Quit();
             return null;
         }
     }
@@ -127,12 +129,6 @@ public class WebListener : MonoBehaviour
     private Boolean isDictionary(string data)
     {
         return data.Contains("{") && data.Contains("}");
-    }
-
-    // Tests the data retrieved from the most recent packet
-    private bool testDataRetrieval()
-    {
-        return true;
     }
 
 }

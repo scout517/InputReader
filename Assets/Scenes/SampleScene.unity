@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testing: 0
-  filePath: C:\Unity Projects\InputReader\Assets\Dictionary Samples\Random500.txt
+  filePath: C:\Unity Projects\InputReader\Assets\Dictionary Samples\Random100000.txt
   remainingTests: 0
 --- !u!4 &387412297
 Transform:

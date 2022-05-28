@@ -2,7 +2,6 @@ from ctypes import sizeof
 import socket
 import pickle
 import json
-import sched
 import time
 
 PORT = 5005 #Port number
@@ -27,10 +26,9 @@ def openFile(filename: str):
     file = open(filename, 'r')
     dictionaries = file.read().split("|\n")
     for dict in dictionaries:
-        #print(dict)
         send(dict)
         time.sleep(1/60)
     file.close()
 
 
-openFile("Dictionary Samples\Random500.txt")
+openFile("Dictionary Samples\Random1000.txt")

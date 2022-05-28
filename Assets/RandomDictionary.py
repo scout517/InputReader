@@ -54,4 +54,4 @@ def clearFile(filename):
     file.close()
     
 
-generate("Random500.txt", 500, 10, 30)
+generate("Random100000.txt", 100000, 10, 30)
