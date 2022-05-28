@@ -4,6 +4,7 @@ Containes test scripts for sending Dictionary data structues from Python to C#
 The data is sent through sockets and can be sent a fast as 60 Hertz. The accuracy of the sent data was tested by randomaly generating 100,000 Dictionaries and sending them to C#. This test was conducted 5/27/22. The test resulted in all Dictionaries being sent correctly and not data was lost.
 
 WebListener.cs
+
 The Web Listener is responsible for recieving the data sent. The Web Listener has been tested to recieve UDP packages at a rate of 60 hertz. The test was conducted by sending 100,000 randomly generated Dictionaries and testing if they are equal to what they are supposed to be. 
 
 void Start() -> This method is called before the first frame in a Unity Application. This method first initalizes a RetrievalTest object to be used if a test is conducted. It also creates a Thread object that is linked to the Listener() method and starts the thread. This thread is created to allow Unity to continue working while the WebListener is waiting for a UDP packet to arrive.
