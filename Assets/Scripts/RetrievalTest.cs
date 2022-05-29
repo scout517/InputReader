@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
 using System.IO;
-using UnityEngine.Pool;
-using System.Linq;
-using Newtonsoft.Json.Serialization;
 
 // This class tests that the data recieved matches what was supposed to be sent
 

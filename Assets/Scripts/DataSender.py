@@ -1,4 +1,3 @@
-from ctypes import sizeof
 import socket
 import pickle
 import json
@@ -30,5 +29,8 @@ def openFile(filename: str):
         time.sleep(1/60)
     file.close()
 
+send({"position": "5,3,0"})
+time.sleep(2)
+send({"color": "32,190,108"})
+send({"position": "0,0,0,3"})
 
-openFile("Dictionary Samples\Random1000.txt")

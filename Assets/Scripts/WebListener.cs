@@ -6,24 +6,25 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 using Newtonsoft.Json;
-using System.Threading;
 
 public class WebListener : MonoBehaviour
 {
+    [SerializeField] bool iterateDictionary = false;
     [SerializeField] bool testing = false;
     [SerializeField] string filePath = "";
     [SerializeField] int remainingTests = 0;
 
     private const int PORT = 5005;
+
     private RetrievalTest testFile;
     private Queue<Dictionary<string, object>> testQueue;
+    private DataRetrieval dataRetrieval;
 
-    // Start is called before the first frame update
     void Start()
     {
         testFile = new RetrievalTest();
-        Thread t = new Thread(() => Listener(GetLocalIP()));
-        t.Start();
+        dataRetrieval = gameObject.GetComponent<DataRetrieval>();
+        StartCoroutine(Listener(GetLocalIP()));
     }
 
     void Update()
@@ -36,7 +37,10 @@ public class WebListener : MonoBehaviour
         }
     }
 
-    // Obtains the local machine IP address and returns it
+    /**
+        This method finds the IP address of the local machine.
+        This IP address is then used to open a socket for which data can be sent through.
+    */
     private IPAddress GetLocalIP()
     {
         var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -50,37 +54,46 @@ public class WebListener : MonoBehaviour
         return null;
     }
 
-    public void Listener(IPAddress ipAddress)
+    /**
+        This method creates a socket using the given IPAddress and a port.
+        It then waits for a UDP packet to be sent.
+    */
+    IEnumerator Listener(IPAddress ipAddress)
     {
         UdpClient listener = new UdpClient(PORT);
-        IPEndPoint groupEP = new IPEndPoint(ipAddress, PORT);
+        IPEndPoint groupEP = new IPEndPoint(GetLocalIP(), PORT);
         Debug.Log(groupEP.Port);
-        try
+        while (true)
         {
-            while (true)
+            if (listener.Available > 0)
             {
-                Byte[] packet = listener.Receive(ref groupEP);
-                string jsonStr = Encoding.UTF8.GetString(packet);
-                if (isDictionary(jsonStr))
+                try
                 {
+                    Byte[] packet = listener.Receive(ref groupEP);
+                    string jsonStr = Encoding.UTF8.GetString(packet);
                     Dictionary<string, object> data = DeserializePacket(jsonStr);
                     if (data != null)
                     {
-                        IsTesting(data);
+                        Debug.Log("Packet Recieved");
+                        dataRetrieval.RecievePacket(data);
+                        IterateDictionary(data);
                     }
                 }
+                catch (Exception e)
+                {
+                    Debug.Log(e.ToString());
+                }
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.ToString());
-        }
-        finally
-        {
-            listener.Close();
+            yield return null;
         }
     }
 
+    /**
+        This method checks if the program is currently testing the data being recieved. 
+        If a test is in progress, then it sends the data to the RetrievalTest object and 
+        tests the data against what it's supposed to be. If the test fails, then a message 
+        is sent to the Unity Debug Log stating that a test failed.
+    */
     private void IsTesting(Dictionary<string, object> data)
     {
         // Tests recieved Dictionary if testing is in progress
@@ -89,13 +102,17 @@ public class WebListener : MonoBehaviour
             if (!testFile.TestPacket(data))
             {
                 Debug.Log("Test Failed!");
-                Application.Quit();
             }
             remainingTests--;
         }
     }
 
-    // Takes the recieved packet and deserializes it into Dictionary object
+    /**
+        This method takes the recieved UDP packet and turns it into a Dictionary.
+        It first finds where the Dictionary starts and ends by looking for the substrings 
+        "{\"" and "}". It then uses the Newtonsoft.Json library to convert the string in a 
+        Dictionary containing string-object key-value pairs.
+    */
     private Dictionary<string, object> DeserializePacket(string jsonStr)
     {
         jsonStr.Replace("\0", string.Empty); // Get rid of all null characters
@@ -118,17 +135,11 @@ public class WebListener : MonoBehaviour
     // Iterates through a dictionary printing all of its keys and values
     private void IterateDictionary(Dictionary<string, object> data)
     {
+        if (!iterateDictionary) { return; }
         foreach (KeyValuePair<string, object> entry in data)
         {
             Debug.Log(entry.Key + ": " + entry.Value);
         }
-    }
-
-    // Checks to make sure a string meets basic requirements to be a dictionary before
-    // Work in Porgress
-    private Boolean isDictionary(string data)
-    {
-        return data.Contains("{") && data.Contains("}");
     }
 
 }
