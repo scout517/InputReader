@@ -20,17 +20,23 @@ def send(msg):
         message = pickle.dumps(json.dumps(msg))
     client.send(message)
 
-# Parses the given file and its data
-def openFile(filename: str):
-    file = open(filename, 'r')
-    dictionaries = file.read().split("|\n")
-    for dict in dictionaries:
-        send(dict)
-        time.sleep(1/60)
-    file.close()
+# Parses the given file and its data and sends it
+# to the receiver
+# def openFile(filename: str):
+#     file = open(filename, 'r')
+#     dictionaries = file.read().split("|\n")
+#     for dict in dictionaries:
+#         send(dict)
+#         time.sleep(1/60)
+#     file.close()
 
-send({"position": "5,3,0"})
-time.sleep(2)
+send({"position": "5,3,0", "rotate": "0,90,0,45"})
+time.sleep(0.5)
+send({"stop": ""})
 send({"color": "32,190,108"})
-send({"position": "0,0,0,3"})
+time.sleep(0.1)
+send({"rotate": "10, 270, 0" ,"position": "0,3,0,3"})
+
+# send({"rotate": "30,90,23,60"})
+
 

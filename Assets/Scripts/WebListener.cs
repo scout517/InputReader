@@ -6,9 +6,28 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 using Newtonsoft.Json;
+using UnityEngine.Pool;
+using Palmmedia.ReportGenerator.Core.Parser.Analysis;
 
 public class WebListener : MonoBehaviour
 {
+
+    /**
+        Structure for the recieved packet.
+        The boolean used indicates if the packet has been
+        used and can be disposed.
+    */
+    public struct Packet
+    {
+        public Packet(Dictionary<string, object> data)
+        {
+            packet = data;
+            used = false;
+        }
+        public Dictionary<string, object> packet;
+        public bool used;
+    }
+
     [SerializeField] bool iterateDictionary = false;
     [SerializeField] bool testing = false;
     [SerializeField] string filePath = "";
@@ -76,6 +95,7 @@ public class WebListener : MonoBehaviour
                     {
                         Debug.Log("Packet Recieved");
                         dataRetrieval.RecievePacket(data);
+                        IsTesting(data);
                         IterateDictionary(data);
                     }
                 }

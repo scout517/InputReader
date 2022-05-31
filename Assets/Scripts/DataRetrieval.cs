@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using UnityEditor.EditorTools;
 using UnityEngine;
 
 public class DataRetrieval : MonoBehaviour
@@ -10,11 +11,14 @@ public class DataRetrieval : MonoBehaviour
 
     [Tooltip("The default speed at which this object moves")]
     [SerializeField] float moveSpeed = 1f;
+    [Tooltip("The default speed at which this object rotates")]
+    [SerializeField] float rotateSpeed = 1f;
 
     //----------------------------------------------------------------------------------------
     // Corutines - All courtines will be listed here for reference
 
     private Coroutine moveToPosition;
+    private Coroutine rotateCoroutine;
 
     //----------------------------------------------------------------------------------------
 
@@ -38,17 +42,18 @@ public class DataRetrieval : MonoBehaviour
             switch (pair.Key)
             {
                 case "position":
-                    Debug.Log("Changing Position");
                     Position(pair.Value);
                     break;
+                case "rotate":
+                    Rotate(pair.Value);
+                    break;
                 case "stop":
-                    Debug.Log("Stopping Object");
                     StopMoving();
+                    StopRotating();
                     break;
                 case "color":
                     ColorChange(pair.Value);
                     break;
-
                 default:
                     Debug.Log("Error: No such command exists -> " + pair.Key);
                     break;
@@ -63,13 +68,13 @@ public class DataRetrieval : MonoBehaviour
     */
     private void Position(object value)
     {
-        if(CheckIfNull(value)) {return;} // Checks to make sure value isn't null
+        if (CheckIfNull(value)) { return; } // Checks to make sure value isn't null
         string[] coords = value.ToString().Split(",");
-        if(!CheckValueSize(new int[] {3, 4}, coords.Length)) {return;} // Checks to make sure there are 3 or 4 arguments
+        if (!CheckValueSize(new int[] { 3, 4 }, coords.Length)) { return; } // Checks to make sure there are 3 or 4 arguments
         try
         {
             Vector3 newPos = new Vector3(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]));
-            if (moveToPosition != null) { StopCoroutine(moveToPosition); }
+            StopMoving(); // Stops the object from moving if it is
             if (coords.Length == 4)
             {
                 moveToPosition = StartCoroutine(MoveToPosition(newPos, float.Parse(coords[3])));
@@ -111,16 +116,70 @@ public class DataRetrieval : MonoBehaviour
     }
 
     /**
+        Rotates an object to its new angle
+        Format X,Y,Z or X,Y,Z,S where S is speed
+    */
+    private void Rotate(object value)
+    {
+        if(CheckIfNull(value)) { return; }
+        string[] coords = value.ToString().Split(",");
+        if (!CheckValueSize(new int[] { 3, 4 }, coords.Length)) { return; } // Checks to make sure there are 3 or 4 arguments
+        try
+        {
+            Vector3 newPos = new Vector3(float.Parse(coords[0]), float.Parse(coords[1]), float.Parse(coords[2]));
+            StopRotating(); // Stops the object from rotating if it currently is
+            if (coords.Length == 4)
+            {
+                rotateCoroutine = StartCoroutine(RotateToPosition(newPos, float.Parse(coords[3])));
+            }
+            else
+            {
+                rotateCoroutine = StartCoroutine(RotateToPosition(newPos, rotateSpeed));
+            }
+        }
+        catch (ArgumentException e)
+        {
+            Debug.Log("Invalid Coordinates Given. Coordinates must of of type float\n" + e.ToString());
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.ToString());
+        }
+    }
+
+    IEnumerator RotateToPosition(Vector3 newPosition, float speed)
+    {
+        Debug.Log("Rotating: " + newPosition.ToString());
+        Quaternion rotateTo = new Quaternion();
+        rotateTo.eulerAngles = newPosition;
+        while(transform.rotation.eulerAngles != rotateTo.eulerAngles)
+        {
+            Debug.Log("Rotating: " + transform.rotation.ToString());
+            gameObject.transform.rotation = Quaternion.RotateTowards(gameObject.transform.rotation, rotateTo, speed * Time.deltaTime);
+            yield return null;
+        }
+    }
+
+    /**
+        Stops the objects rotation in its new position
+    */
+    private void StopRotating()
+    {
+        if (rotateCoroutine != null) { StopCoroutine(rotateCoroutine); }
+    }
+
+
+    /**
         Changes the current color of the object
         Format "r,g,b"
     */
     private void ColorChange(object color)
     {
-        if(CheckIfNull(color)) {return;}
+        if (CheckIfNull(color)) { return; }
         string[] rgbCode = color.ToString().Split(",");
-        if(!CheckValueSize(3, rgbCode.Length)) {return;}
+        if (!CheckValueSize(3, rgbCode.Length)) { return; }
         Renderer renderer = gameObject.GetComponent<Renderer>();
-        if(renderer == null)
+        if (renderer == null)
         {
             Debug.Log("Color Change Failed: Object doesn't contain a renderer");
             return;
@@ -146,7 +205,7 @@ public class DataRetrieval : MonoBehaviour
     */
     private bool CheckIfNull(object value)
     {
-        if(value == null)
+        if (value == null)
         {
             Debug.Log("Error: Given value is null");
             return true;
@@ -160,9 +219,9 @@ public class DataRetrieval : MonoBehaviour
     */
     private bool CheckValueSize(int[] sizes, int actualSize)
     {
-        foreach(int size in sizes)
+        foreach (int size in sizes)
         {
-            if(size == actualSize) {return true;}
+            if (size == actualSize) { return true; }
         }
         Debug.Log("Invalid command given. Expected " + sizes.ToString() + " arguments. Recieved: " + actualSize);
         return false;
@@ -173,7 +232,7 @@ public class DataRetrieval : MonoBehaviour
     */
     private bool CheckValueSize(int size, int actualSize)
     {
-        if(size == actualSize)
+        if (size == actualSize)
         {
             return true;
         }
