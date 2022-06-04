@@ -26,6 +26,7 @@ public class WebListener : MonoBehaviour
         }
         public Dictionary<string, object> packet;
         public bool used;
+        // Add time stamp
     }
 
     [SerializeField] bool iterateDictionary = false;

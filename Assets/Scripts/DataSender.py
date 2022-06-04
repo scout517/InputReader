@@ -30,13 +30,10 @@ def send(msg):
 #         time.sleep(1/60)
 #     file.close()
 
-send({"position": "5,3,0", "rotate": "0,90,0,45"})
-time.sleep(0.5)
-send({"stop": ""})
-send({"color": "32,190,108"})
-time.sleep(0.1)
-send({"rotate": "10, 270, 0" ,"position": "0,3,0,3"})
-
-# send({"rotate": "30,90,23,60"})
+time.sleep(2)
+# send({"position": "5,3,0", "rotate": "0,90,0,45"})
+# time.sleep(1.5)
+# send({"stop": ""})
+send({"rotate": "10, 270, 0", "position": "0,3,0,3", "color": "32,190,108"})
 
 
